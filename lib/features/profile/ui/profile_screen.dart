@@ -118,7 +118,7 @@ class ProfileScreen extends StatelessWidget {
           const SizedBox(height: 16),
           Center(
             child: Text(
-              'جوزة • الإصدار 3.0.0${Env.hasSupabase ? '' : ' • غير مربوط بخادم'}',
+              'جوزة • الإصدار 3.0.1${Env.hasSupabase ? '' : ' • غير مربوط بخادم'}',
               style: TextStyle(fontSize: 11.5, color: p.textMuted),
             ),
           ),
