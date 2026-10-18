@@ -1,0 +1,79 @@
+name: joosa
+description: "نظام إدارة مولدات الكهرباء"
+publish_to: 'none'
+version: 3.0.0+3
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State management
+  get: ^4.7.3
+
+  # Backend: Supabase (Postgres + Auth). Replaces the Django REST API.
+  supabase_flutter: ^2.18.3
+  http: ^1.5.0
+
+  # Session tokens in the platform keychain / keystore
+  flutter_secure_storage: ^11.2.0
+
+  # Theme preference + offline receipts queue
+  shared_preferences: ^2.5.6
+
+  # Receipt image: capture widget as PNG
+  screenshot: ^3.0.0
+
+  # Share the receipt PNG
+  share_plus: ^13.3.1
+
+  # File system path
+  path_provider: ^2.1.6
+
+  # Print support
+  printing: ^5.15.1
+  pdf: ^3.13.1
+
+  # Date / number formatting
+  intl: ^0.20.2
+
+  # Icons
+  cupertino_icons: ^1.0.8
+
+  # Charts
+  fl_chart: ^1.2.0
+
+  # QR Code generation
+  qr_flutter: ^4.1.0
+
+  # QR Code scanner (camera)
+  mobile_scanner: ^7.4.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/fonts/
+
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/Cairo-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Cairo-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Cairo-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Cairo-ExtraBold.ttf
+          weight: 800
