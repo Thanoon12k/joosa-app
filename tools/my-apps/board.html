@@ -1,0 +1,480 @@
+<title>My Apps Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a release board — one lane per status, cards carry name, brief and link. */
+:root {
+  --bg: #f2f3f6;
+  --panel: #ffffff;
+  --lane: #e8eaf0;
+  --ink: #171a24;
+  --ink-2: #545a6c;
+  --ink-3: #8a90a2;
+  --line: #d9dce5;
+  --accent: #3446c7;
+  --accent-ink: #ffffff;
+  --st-dev: #b26a00;      --st-dev-bg: #fff1d9;
+  --st-rel: #17803d;      --st-rel-bg: #e2f5e8;
+  --st-iss: #c0322c;      --st-iss-bg: #fde5e3;
+  --st-upd: #6a3fc4;      --st-upd-bg: #eee6fd;
+  --st-new: #5a6275;      --st-new-bg: #e9ebf1;
+  --danger: #c0322c;
+  --font-display: "Familjen Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12141b; --panel: #1b1e28; --lane: #171a23; --ink: #eef0f6; --ink-2: #aab0c2; --ink-3: #737a8f;
+    --line: #2b2f3d; --accent: #8c9bff; --accent-ink: #12141b;
+    --st-dev: #f2b552; --st-dev-bg: #3a2c12; --st-rel: #5fd38a; --st-rel-bg: #163323;
+    --st-iss: #ff8a83; --st-iss-bg: #3d1b1a; --st-upd: #b9a0ff; --st-upd-bg: #2a2142; --st-new: #aab0c2; --st-new-bg: #262a36; --danger: #ff8a83;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12141b; --panel: #1b1e28; --lane: #171a23; --ink: #eef0f6; --ink-2: #aab0c2; --ink-3: #737a8f;
+  --line: #2b2f3d; --accent: #8c9bff; --accent-ink: #12141b;
+  --st-dev: #f2b552; --st-dev-bg: #3a2c12; --st-rel: #5fd38a; --st-rel-bg: #163323;
+  --st-iss: #ff8a83; --st-iss-bg: #3d1b1a; --st-upd: #b9a0ff; --st-upd-bg: #2a2142; --st-new: #aab0c2; --st-new-bg: #262a36; --danger: #ff8a83;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 40px;
+}
+.wrap { max-width: 1240px; margin: 0 auto; display: flex; flex-direction: column; gap: 18px; }
+header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+h1 { font-family: var(--font-display); font-size: clamp(26px, 4vw, 34px); font-weight: 700; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.sub { color: var(--ink-2); margin: 2px 0 0; font-size: 14px; }
+.sub code { font-family: var(--font-mono); font-size: 13px; }
+button, input, select, textarea { font: inherit; color: inherit; }
+.btn {
+  border: 1px solid var(--line); background: var(--panel); border-radius: 9px; padding: 8px 14px; cursor: pointer;
+  font-weight: 600; font-size: 14px; display: inline-flex; align-items: center; gap: 6px;
+}
+.btn:hover { border-color: var(--ink-3); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.danger { color: var(--danger); }
+.btn:focus-visible, .card :focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn[disabled] { opacity: .55; cursor: default; }
+
+.tally { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-weight: 600; font-size: 13px;
+  background: var(--panel); border: 1px solid var(--line);
+}
+.chip b { font-family: var(--font-mono); font-weight: 500; font-variant-numeric: tabular-nums; }
+.dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.s-developing { --c: var(--st-dev); --cb: var(--st-dev-bg); }
+.s-released { --c: var(--st-rel); --cb: var(--st-rel-bg); }
+.s-needs_update { --c: var(--st-upd); --cb: var(--st-upd-bg); }
+.s-has_issues { --c: var(--st-iss); --cb: var(--st-iss-bg); }
+.s-not_started { --c: var(--st-new); --cb: var(--st-new-bg); }
+.dot { background: var(--c); }
+
+.notice { border: 1px solid var(--line); background: var(--panel); border-radius: 12px; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.notice.err { border-color: var(--danger); }
+.notice[hidden] { display: none; }
+.notice p { margin: 0; min-width: 0; }
+
+.board { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; align-items: start; }
+@media (max-width: 1200px) { .board { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 860px) { .board { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .board { grid-template-columns: minmax(0, 1fr); } }
+.lane { background: var(--lane); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.lane h2 { font-family: var(--font-display); font-size: 15px; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 8px; padding: 2px 4px; }
+.lane h2 .n { margin-left: auto; font-family: var(--font-mono); font-size: 12px; color: var(--ink-3); }
+.empty { color: var(--ink-3); font-size: 13px; padding: 10px 6px; }
+.card {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 11px; padding: 12px 12px 10px;
+  display: flex; flex-direction: column; gap: 6px; min-width: 0; box-shadow: inset 3px 0 0 var(--c);
+}
+.card h3 { margin: 0; font-family: var(--font-display); font-size: 16px; font-weight: 600; overflow-wrap: anywhere; }
+.card p { margin: 0; color: var(--ink-2); font-size: 13.5px; overflow-wrap: anywhere; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; text-align: start; }
+.card a { color: var(--accent); font-size: 13px; overflow-wrap: anywhere; text-decoration: none; }
+.card a:hover { text-decoration: underline; }
+.card .row { display: flex; align-items: center; gap: 6px; margin-top: 2px; flex-wrap: wrap; }
+.card select { border: 1px solid var(--line); background: var(--cb); color: var(--c); border-radius: 7px; padding: 3px 6px; font-size: 12.5px; font-weight: 600; }
+.card .row .spacer { flex: 1; }
+.link-btn { border: 0; background: none; color: var(--ink-2); cursor: pointer; padding: 4px 6px; border-radius: 6px; font-size: 12.5px; font-weight: 600; }
+.link-btn:hover { background: var(--lane); color: var(--ink); }
+.link-btn.danger { color: var(--danger); }
+.skeleton { height: 74px; border-radius: 11px; background: var(--panel); opacity: .55; }
+
+dialog { border: 1px solid var(--line); border-radius: 16px; background: var(--panel); color: var(--ink); padding: 20px; width: min(480px, calc(100vw - 32px)); }
+dialog::backdrop { background: rgb(10 12 20 / .45); }
+dialog h2 { font-family: var(--font-display); margin: 0 0 12px; font-size: 20px; }
+form.grid { display: flex; flex-direction: column; gap: 12px; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+input, select, textarea { border: 1px solid var(--line); background: var(--bg); border-radius: 9px; padding: 9px 11px; font-weight: 400; color: var(--ink); }
+textarea { resize: vertical; min-height: 78px; }
+.hint { font-weight: 400; color: var(--ink-3); font-size: 12px; }
+.actions { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.formerr { color: var(--danger); font-size: 13px; margin: 0; }
+footer { color: var(--ink-3); font-size: 12.5px; }
+.file { font-family: var(--font-mono); font-size: 12px; color: var(--ink-2); background: var(--lane); border-radius: 6px; padding: 2px 7px; align-self: flex-start; overflow-wrap: anywhere; }
+.access { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 20px; }
+@media (max-width: 760px) { .access { grid-template-columns: minmax(0, 1fr); } }
+.access h2 { font-family: var(--font-display); font-size: 17px; margin: 0 0 4px; }
+.access p { margin: 0 0 10px; color: var(--ink-2); font-size: 13.5px; }
+.pinrow { display: flex; gap: 8px; flex-wrap: wrap; }
+.pinrow input { width: 9.5em; font-family: var(--font-mono); letter-spacing: .12em; }
+.msg { font-size: 13px; margin: 8px 0 0; min-height: 1.2em; }
+.msg.err { color: var(--danger); } .msg.ok { color: var(--st-rel); }
+.comments { list-style: none; margin: 4px 0 0; padding: 8px 0 0; border-top: 1px dashed var(--line); display: flex; flex-direction: column; gap: 8px; }
+.comments .meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink-3); flex-wrap: wrap; }
+.comments .meta b { color: var(--ink); font-weight: 600; }
+.comments .meta button { margin-left: auto; }
+.card .comments p { -webkit-line-clamp: unset; display: block; color: var(--ink); }
+.users { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.users li { display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px; min-width: 0; }
+.users .who { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.users .who small { color: var(--ink-3); display: block; font-size: 12px; }
+@media (prefers-reduced-motion: no-preference) { .card { transition: border-color .15s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>My Apps</h1>
+      <p class="sub">Every app by status. New builds (from GitHub or sent to <code>@my99apps_bot</code>) land in Developing. Move one to Released and everyone on the bot is told — people can only download released apps, and can comment on any app.</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" id="refresh" type="button">Refresh</button>
+      <button class="btn primary" id="add" type="button">+ Add app</button>
+    </div>
+  </header>
+
+  <div class="tally" id="tally" aria-live="polite"></div>
+  <div id="notice" hidden></div>
+  <main class="board" id="board" aria-busy="true"></main>
+
+  <section class="access" aria-label="Telegram access">
+    <div>
+      <h2>Bot PIN</h2>
+      <p>Anyone else who opens the bot must send this PIN before they can see or download apps. 5 wrong tries lock them out for 15 minutes.</p>
+      <form class="pinrow" id="pinForm" novalidate>
+        <label for="fPin" style="position:absolute;left:-9999px">New PIN</label>
+        <input id="fPin" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="New PIN">
+        <button class="btn" type="submit" id="pinBtn">Change PIN</button>
+      </form>
+      <p class="msg" id="pinMsg" aria-live="polite"></p>
+    </div>
+    <div>
+      <h2>People with access</h2>
+      <p>They get a message whenever an app is released. Removing someone makes the bot ask them for the PIN again.</p>
+      <ul class="users" id="users"><li class="empty">–</li></ul>
+    </div>
+  </section>
+
+  <footer>Stored in your Supabase project (schema <code>app_manager</code>), read and written through your Supabase connector.</footer>
+</div>
+
+<dialog id="editor" aria-labelledby="editorTitle">
+  <h2 id="editorTitle">Add app</h2>
+  <form class="grid" id="appForm" novalidate>
+    <label for="fName">Name <input id="fName" maxlength="80" required></label>
+    <label for="fStatus">Status
+      <select id="fStatus"></select>
+    </label>
+    <label for="fDesc">Short description <span class="hint">Two lines in Arabic — this is what the Telegram bot shows.</span>
+      <textarea id="fDesc" maxlength="300" dir="auto" rows="2" placeholder="سطر أول يشرح التطبيق&#10;سطر ثانٍ للتفاصيل"></textarea>
+    </label>
+    <label for="fLink">Link <span class="hint">Repository, store page or website (optional).</span>
+      <input id="fLink" maxlength="300" inputmode="url" placeholder="https://">
+    </label>
+    <p class="formerr" id="formErr" hidden></p>
+    <div class="actions">
+      <button class="btn danger" type="button" id="delBtn" hidden>Delete</button>
+      <span style="flex:1"></span>
+      <button class="btn" type="button" id="cancelBtn">Cancel</button>
+      <button class="btn primary" type="submit" id="saveBtn">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const PROJECT = "axncazensmjdqpczvzwf";
+const SERVER = "Supabase";
+const STATUSES = [
+  { key: "developing", label: "Developing" },
+  { key: "released", label: "Released" },
+  { key: "needs_update", label: "Needs update" },
+  { key: "has_issues", label: "Has issues" },
+  { key: "not_started", label: "Not started" },
+];
+const LABEL = Object.fromEntries(STATUSES.map(s => [s.key, s.label]));
+const $ = id => document.getElementById(id);
+
+let mcp = null;
+let apps = [];
+let users = [];
+let comments = [];
+const openComments = new Set(); // app ids whose comment list is expanded
+let loaded = false;
+let editing = null;      // app being edited, or null when adding
+let confirmDelete = false;
+
+// ── Rendering ────────────────────────────────────────────────────────────
+function el(tag, attrs = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === "class") n.className = v; else if (k.startsWith("on")) n.addEventListener(k.slice(2), v); else n.setAttribute(k, v);
+  }
+  for (const k of kids) if (k != null) n.append(k);
+  return n;
+}
+
+function render() {
+  const tally = $("tally"); tally.replaceChildren();
+  for (const s of STATUSES) {
+    const n = apps.filter(a => a.status === s.key).length;
+    tally.append(el("span", { class: `chip s-${s.key}` }, el("span", { class: "dot" }), s.label, el("b", {}, loaded ? String(n) : "–")));
+  }
+  const board = $("board"); board.replaceChildren();
+  board.setAttribute("aria-busy", loaded ? "false" : "true");
+  for (const s of STATUSES) {
+    const list = apps.filter(a => a.status === s.key);
+    const lane = el("section", { class: `lane s-${s.key}`, "aria-label": s.label },
+      el("h2", {}, el("span", { class: "dot" }), s.label, el("span", { class: "n" }, loaded ? String(list.length) : "")));
+    if (!loaded) lane.append(el("div", { class: "skeleton" }), el("div", { class: "skeleton" }));
+    else if (list.length === 0) lane.append(el("div", { class: "empty" }, "No apps here."));
+    for (const a of list) lane.append(card(a));
+    board.append(lane);
+  }
+}
+
+function card(a) {
+  const sel = el("select", { "aria-label": `Status of ${a.name}`, onchange: e => moveApp(a, e.target.value) });
+  for (const s of STATUSES) { const o = el("option", { value: s.key }, s.label); if (s.key === a.status) o.selected = true; sel.append(o); }
+  const link = a.link && /^https?:\/\//i.test(a.link) ? el("a", { href: a.link, target: "_blank", rel: "noopener" }, a.link.replace(/^https?:\/\//i, "")) : null;
+  return el("article", { class: `card s-${a.status}` },
+    el("h3", {}, a.name),
+    a.description ? el("p", { dir: "auto" }, a.description) : null,
+    link,
+    a.file_name ? el("span", { class: "file", title: a.status === "released" ? "Anyone with the PIN can download this build" : "Only you can download this build until it's released" }, (a.status === "released" ? "📦 " : "🔒 ") + a.file_name) : null,
+    el("div", { class: "row" }, sel, el("span", { class: "spacer" }),
+      commentToggle(a),
+      el("button", { class: "link-btn", type: "button", onclick: () => openEditor(a) }, "Edit")),
+    openComments.has(a.id) ? commentList(a) : null);
+}
+
+const commentsOf = a => comments.filter(c => c.app_id === a.id);
+
+function commentToggle(a) {
+  const n = commentsOf(a).length;
+  if (!n) return null;
+  return el("button", { class: "link-btn", type: "button", "aria-expanded": String(openComments.has(a.id)),
+    onclick: () => { openComments.has(a.id) ? openComments.delete(a.id) : openComments.add(a.id); render(); } }, `💬 ${n}`);
+}
+
+function commentList(a) {
+  const ul = el("ul", { class: "comments", "aria-label": `Comments on ${a.name}` });
+  for (const c of commentsOf(a)) {
+    const when = c.created_at ? new Date(c.created_at).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "";
+    ul.append(el("li", {},
+      el("div", { class: "meta" }, el("b", {}, c.author || "Someone"), el("span", {}, when),
+        el("button", { class: "link-btn danger", type: "button", onclick: e => deleteComment(c, e.currentTarget) }, "Delete")),
+      el("p", { dir: "auto" }, c.body)));
+  }
+  return ul;
+}
+
+async function deleteComment(c, btn) {
+  if (!isUuid(c.id)) return;
+  if (btn.dataset.sure !== "1") { btn.dataset.sure = "1"; btn.textContent = "Tap again"; return; }
+  btn.disabled = true;
+  try { await sql(`delete from app_manager.comments where id = ${lit(c.id)}::uuid`); comments = comments.filter(x => x.id !== c.id); render(); }
+  catch (e) { btn.disabled = false; explain(e, () => deleteComment(c, btn)); }
+}
+
+function showNotice(text, { error = false, action = null } = {}) {
+  const n = $("notice");
+  if (!text) { n.hidden = true; n.replaceChildren(); return; }
+  n.className = "notice" + (error ? " err" : "");
+  n.replaceChildren(el("p", {}, text));
+  if (action) n.append(el("button", { class: "btn", type: "button", onclick: action.run }, action.label));
+  n.hidden = false;
+}
+
+// ── Supabase via the viewer's connector ──────────────────────────────────
+// execute_sql answers with text that wraps the JSON rows in a tagged block.
+// SQL literal with a dollar-quote tag that cannot appear inside the value.
+function lit(value) {
+  const s = String(value ?? "").replaceAll("$myapp$", "");
+  return "$myapp$" + s + "$myapp$";
+}
+const isUuid = v => /^[0-9a-f-]{36}$/i.test(v);
+const isStatus = v => STATUSES.some(s => s.key === v);
+
+// Writes don't need to read the answer back.
+async function sql(query) {
+  return mcp.callTool(SERVER, "execute_sql", { project_id: PROJECT, query }, { cache: false });
+}
+
+// Reads come back as one base64 token between markers, so it survives however the app wraps,
+// escapes or nests the connector's text (base64 has no quotes or backslashes to mangle).
+async function readJson(query) {
+  const res = await sql(`select 'MYAPPS64:' || replace(encode(convert_to((${query})::text, 'UTF8'), 'base64'), E'\\n', '') || ':END' as d`);
+  let text = "";
+  try { text = JSON.stringify(res); } catch { text = String(res && res.payload); }
+  const m = text.match(/MYAPPS64:([A-Za-z0-9+\/=\\]+):END/);
+  if (m) {
+    const bin = atob(m[1].replace(/\\/g, ""));
+    return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))));
+  }
+  const shape = res && typeof res === "object" ? Object.keys(res).join(",") : typeof res;
+  throw Object.assign(new Error(`no data in the answer (${shape}): ${text.slice(0, 160)}`), { code: "bad_payload" });
+}
+
+function explain(err, retry) {
+  const code = err && err.code;
+  if (code === "server_not_connected" || code === "server_not_found") return showNotice("Add the Supabase connector in claude.ai Settings → Connectors, then refresh.", { error: true });
+  if (code === "needs_reauth") return showNotice("Reconnect Supabase in claude.ai Settings → Connectors, then refresh.", { error: true });
+  if (code === "selection_required") return showNotice("You have more than one Supabase connector. Choose one when claude.ai asks, then refresh.", { error: true });
+  if (code === "not_in_manifest" || code === "approval_required" || code === "consent_required")
+    return showNotice("This page needs your permission to use Supabase.", { error: true, action: { label: "Allow and retry", run: retry } });
+  if (code === "not_granted" || code === "capability_disabled" || code === "capability_removed")
+    return showNotice("Open this page in claude.ai to load your apps from Supabase.", { error: true });
+  if (code === "tool_error") return showNotice("Supabase refused the request: " + String(err.message || "").slice(0, 240), { error: true, action: { label: "Retry", run: retry } });
+  if (code === "bad_payload") return showNotice("Supabase answered in a form this page didn't understand — " + String(err.message || "").slice(0, 200), { error: true, action: { label: "Retry", run: retry } });
+  return showNotice("Couldn't reach Supabase just now.", { error: true, action: { label: "Retry", run: retry } });
+}
+
+async function load() {
+  if (!mcp) return;
+  $("refresh").disabled = true;
+  try {
+    const data = await readJson(`select json_build_object(
+      'apps', (select coalesce(json_agg(a order by a.sort_order, lower(a.name)), '[]'::json)
+         from (select id, name, description, status, link, sort_order, file_name from app_manager.apps) a),
+      'comments', (select coalesce(json_agg(c order by c.created_at desc), '[]'::json)
+         from (select id, app_id, author, body, created_at from app_manager.comments order by created_at desc limit 300) c),
+      'users', (select coalesce(json_agg(u order by u.authorized_at desc), '[]'::json)
+         from (select chat_id::text as chat_id, first_name, username, authorized_at from app_manager.chats where authorized) u))`);
+    apps = Array.isArray(data.apps) ? data.apps : [];
+    users = Array.isArray(data.users) ? data.users : [];
+    comments = Array.isArray(data.comments) ? data.comments : [];
+    renderUsers();
+    loaded = true;
+    showNotice("");
+    render();
+  } catch (e) { explain(e, load); }
+  finally { $("refresh").disabled = false; }
+}
+
+async function moveApp(a, status) {
+  if (!isUuid(a.id) || !isStatus(status)) return;
+  const before = a.status;
+  a.status = status; render();
+  try {
+    await sql(`update app_manager.apps set status = ${lit(status)} where id = ${lit(a.id)}::uuid`);
+    showNotice(status === "released" && before !== "released" ? `${a.name} is released — announced on Telegram.` : "");
+  }
+  catch (e) { a.status = before; render(); explain(e, () => moveApp(a, status)); }
+}
+
+// ── Editor ───────────────────────────────────────────────────────────────
+for (const s of STATUSES) $("fStatus").append(el("option", { value: s.key }, s.label));
+
+function openEditor(a = null) {
+  editing = a; confirmDelete = false;
+  $("editorTitle").textContent = a ? "Edit app" : "Add app";
+  $("fName").value = a ? a.name : "";
+  $("fStatus").value = a ? a.status : "developing";
+  $("fDesc").value = a ? a.description : "";
+  $("fLink").value = a ? a.link : "";
+  $("delBtn").hidden = !a; $("delBtn").textContent = "Delete";
+  $("formErr").hidden = true;
+  $("editor").showModal();
+  $("fName").focus();
+}
+
+function formError(text) { $("formErr").textContent = text; $("formErr").hidden = !text; }
+
+$("appForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const name = $("fName").value.trim(), status = $("fStatus").value;
+  const description = $("fDesc").value.split("\n").map(l => l.trim().replace(/\s+/g, " ")).filter(Boolean).slice(0, 2).join("\n"), link = $("fLink").value.trim();
+  if (!name) return formError("Give the app a name.");
+  if (link && !/^https?:\/\//i.test(link)) return formError("Links start with http:// or https://");
+  if (!isStatus(status)) return formError("Choose a status.");
+  $("saveBtn").disabled = true; formError("");
+  try {
+    if (editing && isUuid(editing.id)) {
+      await sql(`update app_manager.apps set name = ${lit(name)}, status = ${lit(status)}, description = ${lit(description)}, link = ${lit(link)} where id = ${lit(editing.id)}::uuid`);
+    } else {
+      await sql(`insert into app_manager.apps (name, status, description, link, sort_order)
+                 values (${lit(name)}, ${lit(status)}, ${lit(description)}, ${lit(link)}, (select coalesce(max(sort_order), 0) + 1 from app_manager.apps))`);
+    }
+    $("editor").close();
+    await load();
+  } catch (err) {
+    formError(err && err.code === "tool_error" ? "Supabase refused it: " + String(err.message || "").slice(0, 200) : "Couldn't save. Check your connection and try again.");
+  } finally { $("saveBtn").disabled = false; }
+});
+
+$("delBtn").addEventListener("click", async () => {
+  if (!editing || !isUuid(editing.id)) return;
+  if (!confirmDelete) { confirmDelete = true; $("delBtn").textContent = "Click again to delete"; return; }
+  $("delBtn").disabled = true;
+  try {
+    await sql(`delete from app_manager.apps where id = ${lit(editing.id)}::uuid`);
+    $("editor").close();
+    await load();
+  } catch (err) { formError("Couldn't delete. " + (err && err.code === "tool_error" ? String(err.message || "").slice(0, 200) : "Try again.")); }
+  finally { $("delBtn").disabled = false; }
+});
+
+$("cancelBtn").addEventListener("click", () => $("editor").close());
+$("add").addEventListener("click", () => openEditor());
+$("refresh").addEventListener("click", load);
+
+// ── Telegram access ──────────────────────────────────────────────────────
+function renderUsers() {
+  const ul = $("users"); ul.replaceChildren();
+  if (users.length === 0) { ul.append(el("li", { class: "empty" }, "Nobody yet — share the bot and the PIN.")); return; }
+  for (const u of users) {
+    const name = u.first_name || (u.username ? "@" + u.username : "Telegram user");
+    const since = u.authorized_at ? new Date(u.authorized_at).toLocaleDateString() : "";
+    ul.append(el("li", {},
+      el("span", { class: "who" }, name, el("small", {}, [u.username ? "@" + u.username : "", since && "since " + since].filter(Boolean).join(" · "))),
+      el("button", { class: "link-btn danger", type: "button", onclick: e => removeUser(u, e.currentTarget) }, "Remove")));
+  }
+}
+
+async function removeUser(u, btn) {
+  if (!/^-?\d+$/.test(u.chat_id)) return;
+  if (btn.dataset.sure !== "1") { btn.dataset.sure = "1"; btn.textContent = "Tap again to remove"; return; }
+  btn.disabled = true;
+  try { await sql(`update app_manager.chats set authorized = false where chat_id = ${u.chat_id}`); await load(); }
+  catch (e) { btn.disabled = false; explain(e, () => removeUser(u, btn)); }
+}
+
+$("pinForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const pin = $("fPin").value.trim(), msg = $("pinMsg");
+  msg.className = "msg err";
+  if (!/^\d{4,8}$/.test(pin)) { msg.textContent = "Use 4 to 8 digits."; return; }
+  if (!mcp) { msg.textContent = "Open this page in claude.ai first."; return; }
+  $("pinBtn").disabled = true; msg.textContent = "";
+  try {
+    await sql(`update app_manager.bot_settings set pin_hash = extensions.crypt(${lit(pin)}, extensions.gen_salt('bf')) where true returning true as ok`);
+    $("fPin").value = ""; msg.className = "msg ok"; msg.textContent = "PIN changed. People already in keep their access.";
+  } catch (err) { msg.textContent = err && err.code === "tool_error" ? "Supabase refused it: " + String(err.message || "").slice(0, 160) : "Couldn't change the PIN. Try again."; }
+  finally { $("pinBtn").disabled = false; }
+});
+
+// ── Boot ─────────────────────────────────────────────────────────────────
+render();
+showNotice("Loading your apps from Supabase…");
+(async () => {
+  mcp = window.claude ? await window.claude.use("mcp") : null;
+  if (!mcp) { showNotice("Open this page in claude.ai to load your apps from Supabase.", { error: true }); return; }
+  load();
+})();
+</script>
